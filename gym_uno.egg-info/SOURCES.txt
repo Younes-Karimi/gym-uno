@@ -1,0 +1,5 @@
+gym_uno.egg-info/PKG-INFO
+gym_uno.egg-info/SOURCES.txt
+gym_uno.egg-info/dependency_links.txt
+gym_uno.egg-info/requires.txt
+gym_uno.egg-info/top_level.txt
