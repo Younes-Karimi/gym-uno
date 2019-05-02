@@ -27,6 +27,14 @@ class UnoEnv(gym.Env):
 		self.counter = 0
 		self.moves = 0
 		self.points = 0
+		self.num_total_cards = 8
+		self.num_pile_cards = 1
+		self.num_agent_cards = 3
+		self.num_deck_cards = self.num_total_cards - (self.num_agent_cards + self.num_pile_cards)
+		self.possible_cards = ["1G", "2G", "1R", "2R", "1Y", "2Y", "1B", "2B"]
+		self.agent_cards = np.random.choice(self.possible_cards, self.num_agent_cards, replace=False).tolist()
+		self.deck_cards = np.random.choice(list(set(self.possible_cards) - set(self.agent_cards)), self.num_deck_cards, replace=False).tolist()
+		self.pile_card = list(set(self.possible_cards) - set(self.agent_cards + self.deck_cards))[0]
 		#pass
  
 	def step(self, action):
@@ -40,8 +48,8 @@ class UnoEnv(gym.Env):
 	def render(self, mode='human'):
 		#pass
 		assert mode in ['human', 'state_pixels', 'rgb_array']
-		screen_width = 600
-		screen_height = 400
+		screen_width = 800
+		screen_height = 600
 		boxwidth = 50.0
 		cartwidth = 100.0
 		cartheight = 120.0
@@ -72,16 +80,28 @@ class UnoEnv(gym.Env):
 			self.viewer.add_geom(self.track)
 			
 			win = self.viewer.window
-			self.score_label = pyglet.text.Label('Moves: ' + str(self.moves),
+			self.score_label = pyglet.text.Label('\n\t\t\t\tMoves: ' + str(self.moves),
 						  font_name='Times New Roman',
-						  font_size=16,
+						  font_size=26,
 						  x=win.width//2, y=win.height-40,
 						  anchor_x='center', anchor_y='center')			
 			self.score_label.text = self.score_label.text + "\t\t\t\tPoints: " + str(self.points)
-			self.score_label.text += "\n\n\n######Deck######\n\nCards: "
+			self.score_label.text += "\n\n\n      ================= AGENT CARDS =================\n\n\t\t\t   "
+			for card in self.agent_cards:
+				self.score_label.text += card + "\t\t\t\t"
+			#self.score_label.text += "\n"
+			self.score_label.text += "\n\n\n      ================= PILE TOP CARD ================\n\n\t\t\t\t\t\t\t\t"
+			self.score_label.text += self.pile_card
+			#for card in self.agent_cards:
+			#	self.score_label.text += card + "\t\t"
+			#self.score_label.text += "\n"
+			self.score_label.text += "\n\n\n      ===================== DECK ====================\n\n\t\t   top --> "
+			for card in self.deck_cards:
+				self.score_label.text += card + "\t\t\t"
+			#self.score_label.text += "\n"
 			#self.document = pyglet.text.document.FormattedDocument('\n\nThis is a multi line document. This is a multi line document.')
 			self.document = pyglet.text.document.FormattedDocument(self.score_label.text)
-			self.document.set_style(0,len(self.document.text),dict(color=(255,0,0,255)))
+			self.document.set_style(0,len(self.document.text),dict(color=(255,0,0,255), font_name = 'Times New Roman', font_size=20))
 			self.score_label = pyglet.text.layout.TextLayout(self.document,screen_width,screen_height,multiline=True)
 			#pyglet.clock.schedule_interval(self.update, .01)
 			#self.score_label = pyglet.text.layout.ScrollableTextLayout(self.document, 50, 50, multiline=True) 
@@ -98,7 +118,7 @@ class UnoEnv(gym.Env):
 				self.score_label.draw()
 				if mode == 'human':
 					win.flip()				
-
+			'''
 			win.switch_to()
 			win.dispatch_events()
 			win.clear()
@@ -116,7 +136,7 @@ class UnoEnv(gym.Env):
 				self.score_label2.draw()
 				if mode == 'human':
 					win.flip()	
-			
+			'''
 					  
 		else:
 			#self.viewer.close()
