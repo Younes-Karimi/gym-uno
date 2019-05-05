@@ -37,6 +37,7 @@ class UnoEnv(gym.Env):
 		self.action_space = ['pick_from_deck', 'put_on_pile']
 		# self.observation_space = 
 		self.state = None
+		self.win = None
 
 
 
@@ -130,6 +131,8 @@ class UnoEnv(gym.Env):
 		screen_height = 600
 		from gym.envs.classic_control import rendering
 		self.viewer = rendering.Viewer(screen_width, screen_height)	
+		self.win = self.viewer.window
+
 		agent_cards = np.random.choice(self.possible_cards, NUM_AGENT_CARDS, replace=False).tolist()
 		deck_cards = np.random.choice(list(set(self.possible_cards) - set(agent_cards)), self.num_deck_cards, replace=False).tolist()
 		pile_card = list(set(self.possible_cards) - set(agent_cards + deck_cards))[0]
@@ -140,7 +143,7 @@ class UnoEnv(gym.Env):
 
 
 	def render(self, mode='human'):
-		#pass
+
 		assert mode in ['human', 'state_pixels', 'rgb_array']
 		screen_width = 800
 		screen_height = 600
@@ -149,7 +152,8 @@ class UnoEnv(gym.Env):
 		# if self.viewer is None:
 			
 						
-		win = self.viewer.window
+		#win = self.viewer.window
+		win = self.win
 		self.fillScoreLabel(win)
 		
 		self.document = pyglet.text.document.FormattedDocument(self.score_label.text)
@@ -159,6 +163,7 @@ class UnoEnv(gym.Env):
 		win.switch_to()
 		win.dispatch_events()
 		win.clear()
+		win.flip()
 		print("mode == " + mode)
 		for i in range (1,100):
 			self.score_label.draw()
@@ -243,6 +248,7 @@ class UnoEnv(gym.Env):
 		# else:
 		# 	print("ERROR!!!")
 		# 	exit()
+		
 		return self.viewer.render(return_rgb_array = mode=='rgb_array')			
 		
 
