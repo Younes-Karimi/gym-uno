@@ -10,11 +10,12 @@ import numpy as np
 import tkinter as tk
 
 
-#WINDOW_H = 200
-WINDOW_W = 1000
-WINDOW_H = 800
+WINDOW_W = 800
+WINDOW_H = 600
 NUM_PILE_CARDS = 1
 NUM_AGENT_CARDS = 3
+POINT = 10
+WIN_POINT = 101
 
  
 class UnoEnv(gym.Env):  
@@ -25,7 +26,6 @@ class UnoEnv(gym.Env):
 
 	def __init__(self):
 		self.viewer = None
-		self.reward = 50
 		self.car = None
 		self.counter = 0
 		self.moves = 0
@@ -45,13 +45,11 @@ class UnoEnv(gym.Env):
 		assert (action in self.action_space), ("%r (%s) invalid" % (action, type(action)))
 		state = self.state
 		agent_cards, pile_top, deck_cards = state
-
-		### If agent has a proper card and puts/removes ###
-		### If agent does NOT have a proper card and puts/removes ###
-		has_proper_put, has_proper_remove, no_proper_put, no_proper_remove = None, None, None, None
-
+		
 		action_type = {
-			'has-proper-put': False,
+			### If agent has a proper card and puts/removes ###
+			### If agent does NOT have a proper card and puts/removes ###
+			'has-proper-put': False, 
 			'has-proper-remove': False,
 			'no-proper-put': False,
 			'no-proper-remove': False
@@ -67,18 +65,25 @@ class UnoEnv(gym.Env):
 				selection = np.random.choice(proper_agent_cards, 1, replace=False).tolist()[0]
 				pile_top = selection
 				agent_cards.remove(selection)
-				has_proper_put = True
+				action_type['has-proper-put'] = True
+				self.points += POINT
+				self.moves += 1
 			else:
-				no_proper_put = True
+				action_type['no-proper-put'] = True
 				#? Add beyond-moves, moves++, reward = 0
 
 		elif action == 'pick_from_deck':
 			if len(proper_agent_cards) > 0:
-				has_proper_remove = True
+				action_type['has-proper-remove'] = True
+				self.points -= 2 * POINT
 			else:
-				selection = deck_cards[0]
-				agent_cards.append(selection)
-				no_proper_remove = True
+				action_type['no-proper-remove'] = True
+				self.points -= POINT
+
+			self.moves += 1				
+			selection = deck_cards[0]
+			deck_cards.remove(selection)
+			agent_cards.append(selection)
 
 		self.state = (agent_cards, pile_top, deck_cards)
 
@@ -102,10 +107,32 @@ class UnoEnv(gym.Env):
         #     theta_dot = theta_dot + self.tau * thetaacc
         #     theta = theta + self.tau * theta_dot
         # self.state = (x,x_dot,theta,theta_dot)
+
+
+		done = None
+
+		if len(agent_cards)==0 and len(deck_cards)!=0:
+			done = 'win'
+		elif len(deck_cards)==0:
+			done = 'lose'
+		# elif self.num_deck_cards==0:
+		# 	self.displayResult('lose', win)
+
+
+		# if NUM_AGENT_CARDS!=0 and self.num_deck_cards!=0:
+		# 	self.step('pick_from_deck')
+		# elif NUM_AGENT_CARDS==0 and self.num_deck_cards!=0:
+		# 	self.displayResult('win', win)
+		# elif self.num_deck_cards==0:
+		# 	self.displayResult('lose', win)
+		# else:
+		# 	print("ERROR!!!")
+		# 	exit()
 		
 		
 		
-		done =  bool((len(agent_cards) < 1) or (len(agent_cards) > self.num_total_cards - 2))
+		#done =  bool((len(agent_cards) < 1) or (len(agent_cards) > self.num_total_cards - 2))
+
 
         # if not done:
         #     reward = 1.0
@@ -120,18 +147,18 @@ class UnoEnv(gym.Env):
         #     reward = 0.0
 
 		# self.render()
-		reward = 0
 		
-		return np.array(self.state), reward, done, {}
+		return np.array(self.state), self.points, self.moves, done
 
  
 
 	def reset(self):
-		screen_width = 800
-		screen_height = 600
+
 		from gym.envs.classic_control import rendering
-		self.viewer = rendering.Viewer(screen_width, screen_height)	
+		self.viewer = rendering.Viewer(WINDOW_W, WINDOW_H)	
 		self.win = self.viewer.window
+		self.points = 0
+		self.moves = 0
 
 		agent_cards = np.random.choice(self.possible_cards, NUM_AGENT_CARDS, replace=False).tolist()
 		deck_cards = np.random.choice(list(set(self.possible_cards) - set(agent_cards)), self.num_deck_cards, replace=False).tolist()
@@ -145,8 +172,6 @@ class UnoEnv(gym.Env):
 	def render(self, mode='human'):
 
 		assert mode in ['human', 'state_pixels', 'rgb_array']
-		screen_width = 800
-		screen_height = 600
 		print("self.viewer = " + repr(self.viewer))
 		
 		# if self.viewer is None:
@@ -154,18 +179,29 @@ class UnoEnv(gym.Env):
 						
 		#win = self.viewer.window
 		win = self.win
-		self.fillScoreLabel(win)
+		# self.fillScoreLabel(win)
 		
-		self.document = pyglet.text.document.FormattedDocument(self.score_label.text)
-		self.document.set_style(0,len(self.document.text),dict(color=(255,0,0,255), font_name = 'Times New Roman', font_size=20))
-		self.score_label = pyglet.text.layout.TextLayout(self.document,screen_width,screen_height,multiline=True)
+		# self.document = pyglet.text.document.FormattedDocument(self.score_label.text)
+		# self.document.set_style(0,len(self.document.text),dict(color=(255,0,0,255), font_name = 'Times New Roman', font_size=20))
+		# self.score_label = pyglet.text.layout.TextLayout(self.document,WINDOW_W,WINDOW_H,multiline=True)
 
+		#win = self.viewer.window
 		win.switch_to()
 		win.dispatch_events()
 		win.clear()
 		win.flip()
+
+		self.fillScoreLabel(win)
+		self.document = pyglet.text.document.FormattedDocument(self.score_label.text)
+		self.document.set_style(0,len(self.document.text),dict(color=(255,0,0,255), font_name = 'Times New Roman', font_size=20))
+		self.score_label = pyglet.text.layout.TextLayout(self.document,WINDOW_W,WINDOW_H,multiline=True)
+		
+		win.switch_to()
+		win.dispatch_events()
+		win.clear()
+
 		print("mode == " + mode)
-		for i in range (1,100):
+		for i in range (1, 500):
 			self.score_label.draw()
 			if mode == 'human':
 				win.flip()				
@@ -193,7 +229,7 @@ class UnoEnv(gym.Env):
 		# else:
 		# 	#self.viewer.close()
 		# 	#from gym.envs.classic_control import rendering
-		# 	#self.viewer = rendering.Viewer(screen_width, screen_height)
+		# 	#self.viewer = rendering.Viewer(WINDOW_W, WINDOW_H)
 			
 		# 	win = self.viewer.window
 		# 	win.switch_to()
@@ -249,7 +285,10 @@ class UnoEnv(gym.Env):
 		# 	print("ERROR!!!")
 		# 	exit()
 		
-		return self.viewer.render(return_rgb_array = mode=='rgb_array')			
+		# return self.viewer.render(return_rgb_array = mode=='rgb_array')	
+
+		self.win = win		
+		return self.viewer.render()			
 		
 
 
@@ -276,6 +315,12 @@ class UnoEnv(gym.Env):
 		for card in deck_cards:
 			self.score_label.text += card + "\t\t\t"
 	
+
+	def closeWin(self):
+		if self.win:
+			self.win.close()
+			self.win = None
+
 	def close(self):
 		if self.viewer:
 			self.viewer.close()

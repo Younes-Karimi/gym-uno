@@ -15,10 +15,17 @@ action_space = ['pick_from_deck', 'put_on_pile']
 
 observation = env.reset()
 for _ in range(1000):
-  env.render()
-  action = action_space[np.random.choice(len(action_space))] # your agent here (this takes random actions)
-  observation, reward, done, info = env.step(action)
 
-  if done:
-    observation = env.reset()
+    print('Episode: %d\n' % _)
+    env.render()
+    action = action_space[np.random.choice(len(action_space))] # your agent here (this takes random actions)
+    observation, points, moves, done = env.step(action)
+
+    if done is not None:
+        if done == 'win':
+            print("Win!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(observation, points, moves))
+        elif done == 'lose':
+            print("Lose!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(observation, points, moves))
+        env.closeWin()
+        observation = env.reset()
 env.close()
