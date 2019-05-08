@@ -4,6 +4,11 @@ import itertools
 import numpy as np
 
 
+
+NOISE = True
+EPISODES = 30000
+
+
 # env.reset()
 # #for _ in range(4):
 # env.render()
@@ -82,10 +87,9 @@ Q = np.zeros([len(observation_space), len(action_space)])
 # 2. Parameters of Q-leanring
 eta = .628
 gma = .9
-epis = 1000
 rev_list = [] # rewards per episode calculate
 # 3. Q-learning Algorithm
-for i in range(epis):
+for i in range(EPISODES):
     # Reset environment
     current_state = env.reset()
     current_state = (sorted(current_state[0]), current_state[1], sorted(current_state[2]))
@@ -102,8 +106,10 @@ for i in range(epis):
         env.render()
         j+=1
         # Choose action from Q table
-        # a = np.argmax(Q[s,:] + np.random.randn(1, len(action_space))*(1./(i+1)))
-        a = np.argmax(Q[s,:])
+        if NOISE:
+            a = np.argmax(Q[s,:] + np.random.randn(1, len(action_space))*(1./(i+1)))
+        else:
+            a = np.argmax(Q[s,:])
         #Get new state & reward from environment
         new_state, r, moves, d = env.step(action_space[a])
         new_state = (sorted(new_state[0]), new_state[1], sorted(new_state[2]))
@@ -125,7 +131,7 @@ for i in range(epis):
             elif d == 'lose':
                 print("Lose!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(current_state, r, moves))
             env.closeWin()
-            env.reset()
+            # env.reset()
             break
     rev_list.append(rAll)
     # env.render()

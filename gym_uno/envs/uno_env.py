@@ -10,13 +10,14 @@ import numpy as np
 import tkinter as tk
 
 
-WINDOW_W = 800
+# WINDOW_W = 800
+WINDOW_W = 1200
 WINDOW_H = 600
 NUM_PILE_CARDS = 1
 NUM_AGENT_CARDS = 3
 POINT = 10
 WIN_POINT = 101
-DELAY = 5
+DELAY = 1
 
  
 class UnoEnv(gym.Env):  
@@ -316,12 +317,12 @@ class UnoEnv(gym.Env):
 		self.score_label.text = self.score_label.text + "\t\t\t\tPoints: " + str(self.points)
 		self.score_label.text += "\n\n\n      ================= AGENT CARDS =================\n\n\t\t\t   "
 		for card in agent_cards:
-			self.score_label.text += card + "\t\t\t\t"
+			self.score_label.text += card + "\t\t\t"
 
 		self.score_label.text += "\n\n\n      ================= PILE TOP CARD ================\n\n\t\t\t\t\t\t\t\t"
 		self.score_label.text += pile_card
 
-		self.score_label.text += "\n\n\n      ===================== DECK ====================\n\n\t\t   top --> "
+		self.score_label.text += "\n\n\n      ===================== DECK ====================\n\n\t\t\t"
 		for card in deck_cards:
 			self.score_label.text += card + "\t\t\t"
 	
