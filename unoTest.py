@@ -3,7 +3,6 @@ import gym_uno
 import itertools
 import numpy as np
 
-env = gym.make('Uno-v0')
 
 # env.reset()
 # #for _ in range(4):
@@ -11,9 +10,6 @@ env = gym.make('Uno-v0')
 # #	print("action")
 #     #env.step(env.action_space.sample()) # take a random action
 # env.close() 
-
-action_space = ['pick_from_deck', 'put_on_pile']
-
 
   
 def _findsubsets(s, n): 
@@ -44,27 +40,113 @@ def observation_space_creator():
                     deck_cards_subsets = _findsubsets(list(set(possible_cards) - set(agent_cards_subset) - set(pile_card)), num_deck_cards)
 
                     for deck_cards_subset in deck_cards_subsets:
-                        observation_space.append([agent_cards_subset, pile_card, deck_cards_subset])
+                        observation_space.append((sorted(list(agent_cards_subset)), pile_card[0], sorted(list(deck_cards_subset))))
 
     return observation_space
 
 
 
-observation_space = observation_space_creator()
+observation_space = observation_space_creator() # 16640 states
 
-observation = env.reset()
-for _ in range(1000):
+# observation = env.reset()
+# for _ in range(1000):
 
-    print('Episode: %d\n' % _)
-    env.render()
-    action = action_space[np.random.choice(len(action_space))] # your agent here (this takes random actions)
-    observation, points, moves, done = env.step(action)
+#     print('Episode: %d\n' % _)
+#     env.render()
+#     action = action_space[np.random.choice(len(action_space))] # your agent here (this takes random actions)
+#     observation, points, moves, done = env.step(action)
 
-    if done is not None:
-        if done == 'win':
-            print("Win!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(observation, points, moves))
-        elif done == 'lose':
-            print("Lose!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(observation, points, moves))
-        env.closeWin()
-        observation = env.reset()
+#     if done is not None:
+        # if done == 'win':
+        #     print("Win!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(observation, points, moves))
+        # elif done == 'lose':
+        #     print("Lose!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(observation, points, moves))
+#         env.closeWin()
+#         observation = env.reset()
+# env.close()
+
+
+
+
+
+
+action_space = ['pick_from_deck', 'put_on_pile']
+
+
+# env = gym.make('FrozenLake8x8-v0')
+
+
+# 1. Load Environment and Q-table structure
+env = gym.make('Uno-v0')
+Q = np.zeros([len(observation_space), len(action_space)])
+# 2. Parameters of Q-leanring
+eta = .628
+gma = .9
+epis = 1000
+rev_list = [] # rewards per episode calculate
+# 3. Q-learning Algorithm
+for i in range(epis):
+    # Reset environment
+    current_state = env.reset()
+    current_state = (sorted(current_state[0]), current_state[1], sorted(current_state[2]))
+
+    # print(current_state)
+
+    s = observation_space.index(current_state)
+    rAll = 0
+    d = False
+    j = 0
+    # #The Q-Table learning algorithm
+    while j < 99:
+    # while done is not None:
+        env.render()
+        j+=1
+        # Choose action from Q table
+        # a = np.argmax(Q[s,:] + np.random.randn(1, len(action_space))*(1./(i+1)))
+        a = np.argmax(Q[s,:])
+        #Get new state & reward from environment
+        new_state, r, moves, d = env.step(action_space[a])
+        new_state = (sorted(new_state[0]), new_state[1], sorted(new_state[2]))
+        s1 = observation_space.index(new_state)
+        #Update Q-Table with new knowledge
+
+        print('BBBBBEfore: ', Q[s,:])
+
+        Q[s,a] = Q[s,a] + eta*(r + gma*np.max(Q[s1,:]) - Q[s,a])
+
+        print('AAAAAfter: ', Q[s,:])
+
+        rAll += r
+        s = s1
+
+        if d is not None:
+            if d == 'win':
+                print("Win!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(current_state, r, moves))
+            elif d == 'lose':
+                print("Lose!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(current_state, r, moves))
+            env.closeWin()
+            env.reset()
+            break
+    rev_list.append(rAll)
+    # env.render()
+
 env.close()
+# print(observation_space[inde])
+# print(observation_space.index(s))
+# print(observation_space[observation_space.index(s)])
+
+
+
+
+
+
+
+
+# print "Reward Sum on all episodes " + str(sum(rev_list)/epis)
+# print "Final Values Q-Table"
+# print Q
+
+
+# [list(['2R', '1R', '2B']) '1G' list(['1B', '2G', '1Y', '2Y'])]
+# [(), ('2B',), ('2Y', '2R', '1Y')]
+# [('2B',), ('2Y',), ('1B', '2R')]

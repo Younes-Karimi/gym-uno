@@ -16,6 +16,7 @@ NUM_PILE_CARDS = 1
 NUM_AGENT_CARDS = 3
 POINT = 10
 WIN_POINT = 101
+DELAY = 5
 
  
 class UnoEnv(gym.Env):  
@@ -41,11 +42,8 @@ class UnoEnv(gym.Env):
 
 
 
-	def step(self, action):
-		assert (action in self.action_space), ("%r (%s) invalid" % (action, type(action)))
-		state = self.state
-		agent_cards, pile_top, deck_cards = state
-		
+	def _transition_function(self, action, agent_cards, pile_top, proper_agent_cards, deck_cards):
+
 		action_type = {
 			### If agent has a proper card and puts/removes ###
 			### If agent does NOT have a proper card and puts/removes ###
@@ -55,11 +53,6 @@ class UnoEnv(gym.Env):
 			'no-proper-remove': False
 		}
 
-		pile_num = pile_top[0]
-		pile_color = pile_top[1]
-
-		proper_agent_cards = [card for card in agent_cards if (card[0] == pile_num) or (card[1] == pile_color)]
-
 		if action == 'put_on_pile':		
 			if len(proper_agent_cards) > 0:
 				selection = np.random.choice(proper_agent_cards, 1, replace=False).tolist()[0]
@@ -68,9 +61,10 @@ class UnoEnv(gym.Env):
 				action_type['has-proper-put'] = True
 				self.points += POINT
 				self.moves += 1
+				return pile_top
 			else:
 				action_type['no-proper-put'] = True
-				#? Add beyond-moves, moves++, reward = 0
+				self.points -= 2 * POINT
 
 		elif action == 'pick_from_deck':
 			if len(proper_agent_cards) > 0:
@@ -81,9 +75,26 @@ class UnoEnv(gym.Env):
 				self.points -= POINT
 
 			self.moves += 1				
-			selection = deck_cards[0]
+			selection = np.random.choice(deck_cards, 1, replace=False).tolist()[0]
 			deck_cards.remove(selection)
 			agent_cards.append(selection)
+
+		return pile_top
+
+
+
+	def step(self, action):
+
+		assert (action in self.action_space), ("%r (%s) invalid" % (action, type(action)))
+		state = self.state
+		agent_cards, pile_top, deck_cards = state
+
+		pile_num = pile_top[0]
+		pile_color = pile_top[1]
+
+		proper_agent_cards = [card for card in agent_cards if (card[0] == pile_num) or (card[1] == pile_color)]
+
+		pile_top = self._transition_function(action, agent_cards, pile_top, proper_agent_cards, deck_cards)
 
 		self.state = (agent_cards, pile_top, deck_cards)
 
@@ -165,14 +176,14 @@ class UnoEnv(gym.Env):
 		pile_card = list(set(self.possible_cards) - set(agent_cards + deck_cards))[0]
 		self.state = agent_cards, pile_card, deck_cards
         # self.steps_beyond_done = None
-		return np.array(self.state)
+		# return np.array(self.state)
+		return self.state
  
 
 
 	def render(self, mode='human'):
 
 		assert mode in ['human', 'state_pixels', 'rgb_array']
-		print("self.viewer = " + repr(self.viewer))
 		
 		# if self.viewer is None:
 			
@@ -200,8 +211,7 @@ class UnoEnv(gym.Env):
 		win.dispatch_events()
 		win.clear()
 
-		print("mode == " + mode)
-		for i in range (1, 500):
+		for i in range (1, DELAY):
 			self.score_label.draw()
 			if mode == 'human':
 				win.flip()				
