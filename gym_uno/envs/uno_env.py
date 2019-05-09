@@ -12,12 +12,12 @@ import tkinter as tk
 
 # WINDOW_W = 800
 WINDOW_W = 1200
-WINDOW_H = 600
+WINDOW_H = 800
 NUM_PILE_CARDS = 1
 NUM_AGENT_CARDS = 3
 POINT = 10
 WIN_POINT = 101
-DELAY = 1
+DELAY = 600
 
  
 class UnoEnv(gym.Env):  
@@ -309,39 +309,39 @@ class UnoEnv(gym.Env):
 		pile_card = self.state[1]
 		deck_cards = self.state[2]
 
-		self.score_label = pyglet.text.Label('\n\t\t\t\tMoves: ' + str(self.moves),
+		self.score_label = pyglet.text.Label('\n\n\n\t\t\t\t\t\tMOVES: ' + str(self.moves),
 					  font_name='Times New Roman',
 					  font_size=26,
 					  x=win.width//2, y=win.height-40,
-					  anchor_x='center', anchor_y='center')			
-		self.score_label.text = self.score_label.text + "\t\t\t\tPoints: " + str(self.points)
-		self.score_label.text += "\n\n\n      ================= AGENT CARDS =================\n\n\t\t\t   "
+					  anchor_x='center', anchor_y='center')
+		
+		string = "\t\t\t\t\t\t\tPOINTS: " + str(self.points)							
+		self.score_label.text += string
+
+		string = '\n\n\n\n\n      ' + '=' * 29 + '  AGENT CARDS  ' + '=' * 30 + '\n\n\t\t\t '
+		self.score_label.text += string
 		for card in agent_cards:
 			self.score_label.text += card + "\t\t\t"
 
-		self.score_label.text += "\n\n\n      ================= PILE TOP CARD ================\n\n\t\t\t\t\t\t\t\t"
-		self.score_label.text += pile_card
+		string = '\n\n\n      ' + '=' * 29 + '  PILE TOP CARD  ' + '=' * 29 + '\n\n\t\t\t\t\t\t\t\t\t\t\t    ' + pile_card
+		self.score_label.text += string
 
-		self.score_label.text += "\n\n\n      ===================== DECK ====================\n\n\t\t\t"
+		string = '\n\n\n      ' + '=' * 34 + '  DECK  ' + '=' * 33 + '\n\n\t\t\t '
+		self.score_label.text += string
 		for card in deck_cards:
 			self.score_label.text += card + "\t\t\t"
 	
+
 
 	def closeWin(self):
 		if self.win:
 			self.win.close()
 			self.win = None
 
+
+
 	def close(self):
 		if self.viewer:
 			self.viewer.close()
 			self.viewer = None
-		
-		
-		
-		
-		
-		
-		
-		
 		

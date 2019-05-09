@@ -6,7 +6,7 @@ import numpy as np
 
 
 NOISE = True
-EPISODES = 30000
+EPISODES = 5
 
 
 # env.reset()
@@ -127,9 +127,9 @@ for i in range(EPISODES):
 
         if d is not None:
             if d == 'win':
-                print("Win!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(current_state, r, moves))
+                print("Win!\nObservation: %s\nPoints: %d\nMoves: %d\n\n" %(current_state, r, moves))
             elif d == 'lose':
-                print("Lose!\nObservastion: %s\nPoints: %d\nMoves: %d\n\n" %(current_state, r, moves))
+                print("Lose!\nObservstion: %s\nPoints: %d\nMoves: %d\n\n" %(current_state, r, moves))
             env.closeWin()
             # env.reset()
             break
